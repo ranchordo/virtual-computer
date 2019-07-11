@@ -1,5 +1,4 @@
 package virtcompALL;
-//imports: Fair trade, no tariffs.
 import processing.core.*; 
 import processing.data.*; 
 import processing.event.*; 
@@ -104,7 +103,6 @@ public int[][] instMatrix={
 		
 		{0,1,0,0,0,1,0},
 		{0,1,1,1,1,1,0},
-		//01000100 01101111 01101110 01100101
 		{1,1,0,0,1,0,0},
 		{0,1,0,0,0,1,0},
 		{0,1,1,0,0,0,0},
