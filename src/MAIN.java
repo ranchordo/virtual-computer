@@ -1,4 +1,6 @@
 package virtcompALL;
+//imports
+//Fair trade, no tariffs
 import processing.core.*; 
 import processing.data.*; 
 import processing.event.*; 
@@ -30,6 +32,8 @@ mem[] allmems=new mem[0];
 
 INPUT[] allIns=new INPUT[0];
 LED[] allLeds=new LED[0];
+
+//Initialize the counting variables
 int andC=0;
 int notC=0;
 int orC=0;
@@ -39,6 +43,7 @@ int xorC=0;
 int inputC=0;
 int ledC=0;
 int memC=0;
+//Other globals
 int textY=10;
 int t=0;
 int ALUwid=500;
@@ -48,6 +53,8 @@ String input="";
 String doneinput="";
 init a;
 public String consoleOutput="Output:   ";
+
+//A memory matrix, being initialized
 public int[][] memMatrix={
 		{0,0,0,0},//operation setup
 		{0,0,0,0},//operation setup
@@ -66,6 +73,7 @@ public int[][] memMatrix={
 		{0,0,0,0},//number output
 		{0,0,0,0},//temporary moving
 };
+//Not used.
 public int[][] memMatrix2={
 		{0,0,0,0},
 		{0,0,0,0},
@@ -84,6 +92,7 @@ public int[][] memMatrix2={
 		{0,0,0,0},
 		{0,0,0,0},
 };
+//The preloaded program
 public int[][] instMatrix={
 		{1,1,1,0,0,0,0},
 		
@@ -172,14 +181,17 @@ LED f3;
 LED c4;
 LED x;
 LED y;
+//setup
 public void setup() {
   stroke(0);
   frameRate(2);
   println("Initializing OpenGL...");
   textSize(10);
   println("Initializing Logic...");
+  //a stores all the gates as class data
   a=new init();
   println("Logic Initialization Successful, Initializing Param Classes...");
+  //Init all the things that need special params, eg. Inputs, Outputs
   s0=new INPUT(0,0,"S0");
   s1=new INPUT(20,0,"S1");
   s2=new INPUT(40,0,"S2");
@@ -206,23 +218,29 @@ public void setup() {
   println("COMPLETE Logic Initialized");
   println("Successfully Initialized "+str(andC+notC+orC+norC+nandC+xorC)+" Logic Gates");
 }
+//This function draws the ALU and updates it
 public void drawsub() {
 	background(220);
 	if(instMatrix[eip].length==8) {
+		//For some instructions, feed opex() with 8 bits (I don't think this ever gets called anymore, part of some broken code)
 		if(eip<instMatrix.length) {
 			opex(conv(instMatrix[eip][0]),conv(instMatrix[eip][1]),conv(instMatrix[eip][2]),conv(instMatrix[eip][3]),conv(instMatrix[eip][4]),conv(instMatrix[eip][5]),conv(instMatrix[eip][6]),conv(instMatrix[eip][7]));
 		}
 	} else if(instMatrix[eip].length==7) {
+		//For some instructions, feed opexO() with 7 bits
 		if(eip<instMatrix.length) {
 			opexO(conv(instMatrix[eip][0]),conv(instMatrix[eip][1]),conv(instMatrix[eip][2]),conv(instMatrix[eip][3]),conv(instMatrix[eip][4]),conv(instMatrix[eip][5]),conv(instMatrix[eip][6]));
 		}
 	}
+	//Check if prog is done
 	if(eip<instMatrix.length-1) {
 		eip++;
 	}	
 	background(220);
+	//Simulate a logic tick in the ALU
 	UPDATE_CONNECTIONS_1();
 	UPDATE_CONNECTIONS_2();
+	//Draw the ALU
 	int opc=multiplexer(ALUwid/5,ALUhei-40,"OPCODE",s3.output,s2.output,s1.output,s0.output,0);
 	int ina=multiplexer(2*(ALUwid/5),ALUhei-40,"INPUT A",a3.output,a2.output,a1.output,a0.output,0);
 	int inb=multiplexer(3*(ALUwid/5),ALUhei-40,"INPUT B",b3.output,b2.output,b1.output,b0.output,0);
@@ -238,6 +256,7 @@ public void drawsub() {
 	
 	t++;
 }
+//Update the ALU and draw it
 public void upda() {
 	background(220);
 	UPDATE_CONNECTIONS_1();
@@ -255,9 +274,11 @@ public void upda() {
 	line(ALUwid,0,ALUwid,ALUhei);
 	noStroke();
 }
+//Nothing goes in the main loop, as updates happen on keypresses
 public void draw() {
 
 }
+//On keypess:
 public void keyTyped() {
 	if(key=='1'||key=='0') {
 		input+=key;
@@ -267,15 +288,18 @@ public void keyTyped() {
 	} else {
 	}
 }
+//This handles manually clicking on inputs to change them
 public void mouseClicked() {
 	UPDATE_INPUTS();
 }
+//Disp memory
 public void dispMem(int x, int y) {
 	for(int[] o : memMatrix) {
 		text(convintlist(o),x,y);
 		y+=10;
 	}
 }
+//converts [1,2,3,4,5] to "{1,2,3,4,5}"
 public String convintlist(int[] a) {
 	String ret="{";
 	for(int i=a.length-1;i>=0;i--) {
@@ -285,6 +309,7 @@ public String convintlist(int[] a) {
 	ret=ret+"}";
 	return ret;
 }
+//Execute operations (8 bit)
 public void opex(boolean in1, boolean in2, boolean in3, boolean in4, boolean p1, boolean p2, boolean p3, boolean p4) {
 	//Multiplex:
 	String intstr=conv(in1)+conv(in2)+conv(in3)+conv(in4);
@@ -312,6 +337,7 @@ public void opex(boolean in1, boolean in2, boolean in3, boolean in4, boolean p1,
 		println("OpCase error: Not chosen. Got: "+str(mul));
 	}
 }
+//Execute operations (7 bit)
 public void opexO(boolean in1, boolean in2, boolean in3, boolean p1, boolean p2, boolean p3, boolean p4) {
 	//Multiplex:
 	String intstr=conv(in1)+conv(in2)+conv(in3);
@@ -337,6 +363,7 @@ public void opexO(boolean in1, boolean in2, boolean in3, boolean p1, boolean p2,
 		println("OpCase error: Not chosen. Got: "+str(mul));
 	}
 }
+//Gets ALU drawing bounds, getstuffX, getstuffY
 public int getStuffX(int i) {
   int x=i%(floor(ALUwid/30))*30;
   return x;
@@ -345,6 +372,7 @@ public int getStuffY(int i) {
   int y=floor(i/(ALUwid/30))*20+10;
   return y;
 }
+//Multiplexes 4 binary inputs and draws output text
 public int multiplexer(int x, int y,String title, boolean in1, boolean in2, boolean in3, boolean in4,int plus) {
 	String in=conv(in1)+conv(in2)+conv(in3)+conv(in4);
 	int out=Integer.parseInt(in,2);
@@ -353,16 +381,19 @@ public int multiplexer(int x, int y,String title, boolean in1, boolean in2, bool
 	text(out,x,y+10);
 	return out;
 }
+//Execute opcode 0, add memory addrses 0,1 and store to 2
 public void op0(boolean in1,boolean in2,boolean in3, boolean in4) {
 	String intstr=conv(in1)+conv(in2)+conv(in3)+conv(in4);
 	int p=Integer.parseInt(intstr,2);
 	if(p>=10) {
+		//Set up the ALU (74181) for addition
 		s0.output=true;
 		s1.output=false;
 		s2.output=false;
 		s3.output=true;
 		c.output=true;
 		
+		//provide inputs
 		a0.output=conv(memMatrix[0][0]);
 		a1.output=conv(memMatrix[0][1]);
 		a2.output=conv(memMatrix[0][2]);
@@ -373,6 +404,7 @@ public void op0(boolean in1,boolean in2,boolean in3, boolean in4) {
 		b2.output=conv(memMatrix[1][2]);
 		b3.output=conv(memMatrix[1][3]);
 	
+		//Update and draw the ALU
 		upda();
 	}
 	memMatrix[2][0]=Integer.parseInt(conv(f0.input));
@@ -380,7 +412,7 @@ public void op0(boolean in1,boolean in2,boolean in3, boolean in4) {
 	memMatrix[2][2]=Integer.parseInt(conv(f2.input));
 	memMatrix[2][3]=Integer.parseInt(conv(f3.input));
 }
-
+//Op0, but subtraction
 public void op1() {
 	s0.output=false;
 	s1.output=true;
@@ -405,7 +437,7 @@ public void op1() {
 	memMatrix[2][2]=Integer.parseInt(conv(f2.input));
 	memMatrix[2][3]=Integer.parseInt(conv(f3.input));
 }
-
+//op2: move memory addrs described by parameters to mem15
 public void op2(boolean in1,boolean in2,boolean in3, boolean in4) {
 	String intstr=conv(in1)+conv(in2)+conv(in3)+conv(in4);
 	int p=Integer.parseInt(intstr,2);
@@ -413,7 +445,7 @@ public void op2(boolean in1,boolean in2,boolean in3, boolean in4) {
 	int[] t={0,0,0,0};
 	memMatrix[p]=t;
 }
-
+//op3: move mem15 to mem addrs in params (similar to op2)
 public void op3(boolean in1,boolean in2,boolean in3, boolean in4) {
 	String intstr=conv(in1)+conv(in2)+conv(in3)+conv(in4);
 	int p=Integer.parseInt(intstr,2);
@@ -421,7 +453,7 @@ public void op3(boolean in1,boolean in2,boolean in3, boolean in4) {
 	int[] t={0,0,0,0};
 	memMatrix[15]=t;
 }
-
+//Convert the two mem addrses described by params to ASCII, print out to console
 public void op4(boolean in1,boolean in2,boolean in3, boolean in4) {
 	String intstr=conv(in1)+conv(in2)+conv(in3)+conv(in4);
 	int p=Integer.parseInt(intstr,2);
@@ -429,6 +461,7 @@ public void op4(boolean in1,boolean in2,boolean in3, boolean in4) {
 	String out1=new String(new char[]{(char)asc});
 	consoleOutput=consoleOutput+out1;
 }
+//get last 4 keypresses, conv to binary number, store to mem2
 public void op5(boolean in1, boolean in2, boolean in3, boolean in4) {
 	String intstr=conv(in1)+conv(in2)+conv(in3)+conv(in4);
 	int p=Integer.parseInt(intstr,2);
@@ -441,12 +474,14 @@ public void op5(boolean in1, boolean in2, boolean in3, boolean in4) {
 		//DO NOTHING
 	}
 }
+//Not sure what this does
 public void op6(boolean in1,boolean in2,boolean in3, boolean in4) {
 	memMatrix[2][0]=convi(in4);
 	memMatrix[2][1]=convi(in3);
 	memMatrix[2][2]=convi(in2);
 	memMatrix[2][3]=convi(in1);
 }
+//Clear memory
 public void op7() {
 	int[][] blank={
 		{0,0,0,0},
@@ -468,6 +503,7 @@ public void op7() {
 	};
 	memMatrix=blank;
 }
+//Never called (what the heck is this?)
 public void op8(boolean in1, boolean in2, boolean in3, boolean in4) {
 	String intstr=conv(in1)+conv(in2)+conv(in3)+conv(in4);
 	int p=Integer.parseInt(intstr,2);
@@ -478,6 +514,7 @@ public void op8(boolean in1, boolean in2, boolean in3, boolean in4) {
 		eip=0;//Integer.parseInt(intstr3,2);
 	}
 }
+//conv bool to str
 String conv(boolean in) {
 	String out;
 	if(in) {
@@ -487,6 +524,7 @@ String conv(boolean in) {
 	}
 	return out;
 }
+//int to bool (1,0)
 boolean conv(int in) {
 	if(in==0) {
 		return false;
@@ -494,6 +532,7 @@ boolean conv(int in) {
 		return true;
 	}
 }
+//bool to int
 int convi(boolean in) {
 	int out;
 	if(in) {
@@ -503,11 +542,15 @@ int convi(boolean in) {
 	}
 	return out;
 }
+
+//AND Gate:
 class AND {
+  //init data
   boolean input1=false;
   boolean input2=false;
   boolean output=false;
   String name;
+  //Update gate state
   public void update() {
     if (this.input1&&this.input2) {
       this.output=true;
@@ -515,6 +558,7 @@ class AND {
       this.output=false;
     }
   }
+  //render the gate in the ALU
   public void display(int x, int y) {
     y+=20;
     if (this.output) {
@@ -527,13 +571,14 @@ class AND {
     text(this.name.substring(0, 2), x, y+10);
     text(this.name.substring(2, this.name.length()), x, y+20);
   }
+  //Constructor
   AND(String nm) {
 	  name=nm;
 	  allAnds=Aand(allAnds, this);
 	  andC++;
   }
 }
-
+//Same as AND, different update func
 class NAND {
   boolean input1=false;
   boolean input2=false;
@@ -564,12 +609,13 @@ class NAND {
     nandC++;
   }
 }
-
+//Input class
 class INPUT {
   boolean output=false;
   float x;
   float y;
   String txt;
+  //update input display
   public void update() {
     if (output) {
       fill(255, 255, 0);
@@ -584,11 +630,14 @@ class INPUT {
     }
     text(txt, x, y+10);
   }
+  //Update on click
   public void CliUpdate() {
     if (mouseX<=x+20&&mouseX>=x&&mouseY<=y+10&&mouseY>=y) {
+	  //commented because manual clicking is disabled
       //output=!output;
     }
   }
+  //Constuctor
   INPUT(float xt, float yt, String txtt) {
     x=xt;
     y=yt;
@@ -609,7 +658,7 @@ class INPUT {
     text(txt, x, y+10);
   }
 }
-
+//Basically the same as input
 class LED {
   boolean input=false;
   float x;
@@ -650,7 +699,7 @@ class LED {
     text(txt, x-10, y+5);
   }
 }
-
+//misc gate
 class NOT {
   boolean input=false;
   boolean output=true;
@@ -680,7 +729,7 @@ class NOT {
     notC++;
   }
 }
-
+//misc gate
 class OR {
   boolean input1=false;
   boolean input2=false;
@@ -711,7 +760,7 @@ class OR {
     orC++;
   }
 }
-
+//misc gate
 class NOR {
   boolean input1=false;
   boolean input2=false;
@@ -742,7 +791,7 @@ class NOR {
     norC++;
   }
 }
-
+//misc gate
 class XOR {
   boolean input1=false;
   boolean input2=false;
@@ -776,6 +825,7 @@ class XOR {
   }
 }
 
+//This is completely useless
 public class mem {
 	boolean r=false;
 	boolean s=false;
@@ -795,6 +845,7 @@ public class mem {
 	}
 }
 
+//How to append a gate onto a list of similar gates:
 public AND[] Aand(AND[] a, AND b) {
   AND[] done=new AND[a.length+1];
   for (int i=0; i<a.length; i++) {
@@ -867,6 +918,7 @@ public INPUT[] Ain(INPUT[] a, INPUT b) {
   done[a.length]=b;
   return done;
 }
+//get all gates from list, and render them
 public void display() {
   for(int i=0;i<andC;i++) {
     int s=i;
@@ -909,7 +961,9 @@ public void display() {
     allXors[i].display(x,y);
   }
 }
+//this is what a is:
 class init {
+//---------------------------------------------DEFINE ALL GATES as class data
 //---------------MEM:-----------------//
 
 //---------------Blk 1:---------------//
@@ -1101,9 +1155,11 @@ class init {
   public XOR B8XR2=new XOR("B8XR2");
   public XOR B8XR3=new XOR("B8XR3");
   public XOR B8XR4=new XOR("B8XR4");
-
+  
+  //empty constructor
   init() {}
 }
+//Call update() on all gates
 public void UPDATE() {
   display();
   for(int i=0;i<inputC;i++) {
@@ -1136,6 +1192,8 @@ public void UPDATE() {
 	  allmems[i].update();
   }
 }
+//Update all freaking connections by manually reassigning booleans.
+//EVERY SINGLE FREAKING INPUT AND OUTPUT OF EACH GATE
 public void UPDATE_CONNECTIONS_1() {
   //phase 0:
   a.B1NT1.input=b3.output;
@@ -1170,6 +1228,7 @@ public void UPDATE_CONNECTIONS_1() {
   a.B3AN1.input1=b1.output;
   a.B3AN1.input2=s3.output;
   a.B3AN3.input1=a1.output;
+  //Please kill me now. I'm only in phase 1.
   a.B3AN3.input2=s2.output;
   a.B3AN5.input1=a.B3NT1.output;
   a.B3AN5.input2=s1.output;
@@ -1223,6 +1282,7 @@ public void UPDATE_CONNECTIONS_1() {
   
   a.B3NR1.input1=a.B3AN2.output;
   a.B3NR1.input2=a.B3AN4.output;
+  //This is really terrible.
   a.B3OR1.input1=a.B3AN5.output;
   a.B3OR1.input2=a.B3AN6.output;
   
@@ -1260,6 +1320,7 @@ public void UPDATE_CONNECTIONS_2() {
   a.B5AN8.input2=a.B2NR1.output;
   a.B5AN9.input1=a.B3NR1.output;
   a.B5AN9.input2=a.B4NR1.output;
+  //Oh god.
   a.B5AN12.input1=a.B1NR1.output;
   a.B5AN12.input2=a.B2NR1.output;
   a.B5AN13.input1=a.B3NR1.output;
@@ -1313,6 +1374,7 @@ public void UPDATE_CONNECTIONS_2() {
   a.B5AN14.input2=a.B5AN13.output;
   
   a.B6AN3.input1=a.B6AN1.output;
+  //Holy freaking cow this is a LOT of connections
   a.B6AN3.input2=a.B6AN2.output;
   a.B6AN7.input1=a.B6AN5.output;
   a.B6AN7.input2=a.B6AN6.output;
@@ -1371,6 +1433,7 @@ public void UPDATE_CONNECTIONS_2() {
   a.B6XR2.input2=a.B6NR1.output;
   
   a.B7XR2.input1=a.B7XR1.output;
+  //AAAAAUUUUUUUUUUUUUUUUGGGGGGGGGGGGGGGGGGGHHHHHHHHHHHHHHHHHH
   a.B7XR2.input2=a.B7NR1.output;
   
   a.B8XR2.input1=a.B8XR1.output;
@@ -1391,11 +1454,13 @@ public void UPDATE_CONNECTIONS_2() {
   f1.input=a.B8XR2.output;
   f0.input=a.B8XR4.output;
 }
+//get all inputs and update them
 public void UPDATE_INPUTS() {
   for(int i=0;i<inputC;i++) {
     allIns[i].CliUpdate();
   }
 }
+  //Processing init stuff
   public void settings() {  size(1000,500); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "virtcompALL.MAIN" };
