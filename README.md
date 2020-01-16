@@ -1,7 +1,7 @@
 # virtual-computer
 This program simulates an Intel 74181 by simualating the logic gates, but it has attached memory. There is an instruction set that can be loaded into instMatrix, a variable inside the program.
 
-core.jar is from the non-profit Processing Foundation, and it allows for easy rendering of stuff.
+core.jar is from the non-profit Processing Foundation, and it allows for easy rendering of stuff. It needs to be added to the build path.
 # Instruction set
 instMatrix is a matrix. Each row is 7 bits long. The first 3 bits represent the instruction, and the last 4 represent the parameter.
 Below is a list of the 8 instructions, where the parameter (0-16) is p.
